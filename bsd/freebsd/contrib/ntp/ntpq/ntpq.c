@@ -828,6 +828,14 @@ openhost(
 #ifdef SYS_VXWORKS
 	   (connect(sockfd, (struct sockaddr *)&hostaddr,
 		    sizeof(hostaddr)) == -1)
+#elif defined(__rtems__)
+	   /*
+	    * lwIP's ai_addrlen covers the entire struct which includes
+	    * padding for extra data and is not accurate for calls which
+	    * validate the size of the address structure. Use sa_len instead
+	    */
+	   (connect(sockfd, (struct sockaddr *)ai->ai_addr,
+		ai->ai_addr->sa_len) == -1)
 #else
 	   (connect(sockfd, (struct sockaddr *)ai->ai_addr,
 		ai->ai_addrlen) == -1)
