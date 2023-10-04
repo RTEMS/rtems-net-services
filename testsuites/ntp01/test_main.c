@@ -38,6 +38,7 @@
 #include <rtems/imfs.h>
 #include <rtems/ntpd.h>
 #include <rtems/shell.h>
+#include <rtems/test-printer.h>
 
 #include <rtems/shellconfig-net-services.h>
 
