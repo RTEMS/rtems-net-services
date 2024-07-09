@@ -1,35 +1,43 @@
-Overview
---------
+RTEMS Network Services
+======================
 
 The rtems-net-services repository serves as a central location to manage
 libraries and tests that require network support, but can otherwise be shared
 across multiple network stacks.
 
+
 File Origins
 ------------
+The files under the bsd/ directory are sourced from:
 
-The sources presented here originate in one of several locations described by
-the ORIGIN.* files and whose license is described by the COPYING.* files.
-Commits adding such files should include the hash of the target repository if
+  https://github.com/sebhub/rtems-libbsd.git
+
+Commits adding files should include the hash of the target repository if 
 applicable.
+
+
 
 Installation Instructions
 -------------------------
-1. Populate the git submodules:
+  1. Populate the git submodules:
 
-```
-git submodule init
-git submodule update
-```
-2. Configure and build
-```
-./waf configure --prefix=INSTALL_PREFIX
-./waf
-./waf install
-```
+     ```shell
+     git submodule init
+     git submodule update
+     ```
+  2. Configure and build
 
-More `waf` arguments can be found by using:
-`./waf --help`
+     ```shell
+     ./waf configure --prefix=INSTALL_PREFIX
+     ./waf
+     ./waf install
+     ```
+
+     More `waf` arguments can be found by using:
+
+     ```shell
+     `./waf --help`
+     ```
 
 Further Build Information
 -------------------------
