@@ -4,3 +4,7 @@ Add General Network as the owner for the entire repository.
 
 [General Network] @approvers/general/network
 *
+
+[Documentation] @approvers/docs
+*/README
+*.md
