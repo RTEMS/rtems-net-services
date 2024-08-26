@@ -17,7 +17,7 @@
 #include "ntp_config.h"
 
 #ifdef __rtems__
-#invlude <machine/rtems-bsd-program.h>
+#include <machine/rtems-bsd-program.h>
 #endif
 /* forward prototypes */
 int determine_event_ordering(const Event *e1, const Event *e2);
