@@ -11,6 +11,7 @@
 
 
 #ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
 #ifdef EREALLOC_IMPL
 static void *rtems_ntp_realloc(void *ptr, size_t size, const char* file, int line) {
 	void* mem = realloc(ptr, size);

@@ -4,6 +4,11 @@
  * ntpq-subs.c - subroutines which are called to perform ntpq commands.
  */
 #include <config.h>
+
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <sys/types.h>

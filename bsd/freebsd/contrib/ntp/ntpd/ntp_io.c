@@ -9,6 +9,10 @@
 # include <config.h>
 #endif
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include <stdio.h>
 #include <signal.h>
 #ifdef HAVE_FNMATCH_H

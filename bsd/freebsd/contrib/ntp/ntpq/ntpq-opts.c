@@ -1,4 +1,6 @@
 #include <machine/rtems-bsd-user-space.h>
+#include <config.h>
+#include <machine/rtems-bsd-program.h>
 
 /*
  *  EDIT THIS FILE WITH CAUTION  (ntpq-opts.c)

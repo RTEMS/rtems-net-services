@@ -6,6 +6,10 @@
 #include <config.h>
 #include "ntp_workimpl.h"
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #ifdef WORK_THREAD
 
 #include <stdio.h>

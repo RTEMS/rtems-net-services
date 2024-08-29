@@ -1,4 +1,6 @@
 #include <machine/rtems-bsd-user-space.h>
+#include <config.h>
+#include <machine/rtems-bsd-program.h>
 
 #define  AUTOOPTS_INTERNAL 1
 #include "autoopts/project.h"

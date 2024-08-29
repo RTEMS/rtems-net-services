@@ -11,6 +11,10 @@
 #include <config.h>
 #endif
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include "ntpd.h"
 #include "ntp_stdlib.h"
 #include "ntp_unixtime.h"

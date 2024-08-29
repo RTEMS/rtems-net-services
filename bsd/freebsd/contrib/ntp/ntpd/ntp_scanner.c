@@ -15,6 +15,10 @@
 # include <config.h>
 #endif
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>

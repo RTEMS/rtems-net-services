@@ -266,6 +266,8 @@ static rtems_mutex ntpd_lock = RTEMS_MUTEX_INITIALIZER("ntpd");
 static bool ntpd_running;
 int rtems_ntpd_log_to_term;
 
+static void destroy_ntp_globals(void *arg);
+
 static
 #endif /* __rtems__ */
 int		ntpdmain		(int, char **);
@@ -1410,6 +1412,12 @@ int scmp_sc[] = {
 	ntservice_isup();
 #endif
 
+#ifdef __rtems__
+	if (rtems_bsd_program_add_destructor(destroy_ntp_globals, NULL) ==
+	    NULL) {
+		msyslog(LOG_ERR, "failed to add destructor");
+	}
+#endif /* __rtems__ */
 # ifdef HAVE_IO_COMPLETION_PORT
 
 	for (;;) {
@@ -1605,6 +1613,11 @@ rtems_ntpd_cleanup(void) {
 	rtems_ntp_monitor_globals_fini();
 	rtems_ntp_config_globals_fini();
 	leapsec_ut_pristine();
+}
+
+static void destroy_ntp_globals(void *arg) {
+	(void) arg;
+	rtems_ntpd_cleanup();
 }
 
 int

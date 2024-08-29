@@ -7,6 +7,10 @@
 # include <config.h>
 #endif
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include <math.h>
 #include <stdio.h>
 

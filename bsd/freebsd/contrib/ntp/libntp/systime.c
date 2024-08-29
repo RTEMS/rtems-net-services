@@ -9,6 +9,10 @@
 #include <config.h>
 #include <math.h>
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include "ntp.h"
 #include "ntpd.h"
 #include "ntp_syslog.h"

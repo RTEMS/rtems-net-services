@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <syslog.h>
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include "ntp_fp.h"
 #include "ntp_net.h"
 #include "ntp_stdlib.h"

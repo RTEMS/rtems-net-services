@@ -15,6 +15,10 @@
 # include <config.h>
 #endif
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #ifdef HAVE_NETINFO
 # include <netinfo/ni.h>
 #endif

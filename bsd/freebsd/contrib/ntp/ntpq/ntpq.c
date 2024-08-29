@@ -4,6 +4,17 @@
  * ntpq - query an NTP server using mode 6 commands
  */
 #include <config.h>
+
+#ifdef __rtems__
+#define RTEMS_BSD_PROGRAM_NO_ERROR_WRAP
+#define RTEMS_BSD_PROGRAM_NO_SOCKET_WRAP
+#define RTEMS_BSD_PROGRAM_NO_OPEN_WRAP
+#define RTEMS_BSD_PROGRAM_NO_CLOSE_WRAP
+#define RTEMS_BSD_PROGRAM_NO_FOPEN_WRAP
+#define RTEMS_BSD_PROGRAM_NO_FCLOSE_WRAP
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include <ctype.h>
 #include <signal.h>
 #include <setjmp.h>

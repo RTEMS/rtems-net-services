@@ -10,6 +10,10 @@
 # include <config.h>
 #endif
 
+#ifdef __rtems__
+#include <machine/rtems-bsd-program.h>
+#endif
+
 #include <stdio.h>
 #include <stddef.h>
 #include "ntp_libopts.h"
