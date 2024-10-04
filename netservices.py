@@ -121,19 +121,19 @@ def removeprefix(data, prefix):
 
 
 def options(opt):
-    copts = opt.option_groups['configure options']
+    copts = opt.get_option_group('configure options')
     copts.add_option('--optimization',
                      default='-O2',
                      dest='optimization',
-                     help='Optimaization level (default: %default)')
+                     help='Optimaization level (default: %(default)s)')
     copts.add_option('--net-test-config',
                      default='config.inc',
                      dest='net_config',
-                     help='Network test configuration (default: %default)')
+                     help='Network test configuration (default: %(default)s)')
     copts.add_option('--ntp-debug',
                      action='store_true',
                      dest='ntp_debug',
-                     help='Build NTP with DEBUG enabled (default: %default)')
+                     help='Build NTP with DEBUG enabled (default: %(default)s)')
 
 
 def add_flags(flags, new_flags):
