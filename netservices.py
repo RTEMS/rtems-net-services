@@ -267,6 +267,7 @@ def build(bld):
                 source=ntp_test_sources,
                 cflags=cflags,
                 includes=ntp_test_incl,
+                install_path=None,
                 defines=[net_def],
                 lib=['telnetd'] + libs,
                 use=['ntp', net_use])
@@ -281,6 +282,7 @@ def build(bld):
                 cflags=cflags,
                 defines=[net_def],
                 includes=ttcp_test_incl,
+                install_path=None,
                 lib=libs,
                 use=['ttcp', net_use])
 
@@ -294,5 +296,6 @@ def build(bld):
                 cflags=cflags,
                 defines=[net_def],
                 includes=tlnt_test_incl,
+                install_path=None,
                 lib=['telnetd'] + libs,
                 use=[net_use])
