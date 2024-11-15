@@ -7,6 +7,7 @@
 #include "ntp_workimpl.h"
 
 #ifdef __rtems__
+#define RTEMS_BSD_PROGRAM_NO_CLOSE_WRAP
 #include <machine/rtems-bsd-program.h>
 #endif
 
