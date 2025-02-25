@@ -43,10 +43,6 @@ static u_int intres_slot = UINT_MAX;
 void rtems_ntp_worker_globals_fini(void);
 void rtems_ntp_worker_globals_fini(void) {
 	size_t idx;
-	while (intres_req_pending > 0) {
-		harvest_blocking_responses();
-		usleep(10 * 1000UL);
-	}
 	for (idx = 0; idx < blocking_children_alloc; idx++) {
 		blocking_child* c = blocking_children[idx];
 		if (c != NULL) {
