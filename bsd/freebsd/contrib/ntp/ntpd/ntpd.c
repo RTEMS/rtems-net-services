@@ -1602,8 +1602,8 @@ static void
 rtems_ntpd_cleanup(void) {
 	rtems_ntp_peer_globals_fini();
 	rtems_ntp_control_globals_fini();
-	rtems_ntp_intres_globals_fini();
 	rtems_ntp_worker_globals_fini();
+	rtems_ntp_intres_globals_fini();
 	rtems_ntp_proto_globals_fini();
 	rtems_ntp_io_globals_fini();
 	rtems_ntp_request_globals_fini();
