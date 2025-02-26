@@ -1,0 +1,25 @@
+["defaults"]
+exclude = ["format", "spell"]
+
+[[ignore."ntp"]]
+files = [
+    "bsd/rtemsbsd/include/machine/rtems-bsd-program.h",
+    "bsd/rtemsbsd/include/rtems/*",
+    "bsd/rtemsbsd/rtems/*",
+    "bsd/freebsd/contrib/ntp/include/*",
+    "bsd/freebsd/contrib/ntp/include/isc/mem.h",
+    "bsd/freebsd/contrib/ntp/libntp/*",
+    "bsd/freebsd/contrib/ntp/lib/isc/pthreads/include/isc/*",
+    "bsd/freebsd/contrib/ntp/lib/isc/pthreads/mutex.c",
+    "bsd/freebsd/contrib/ntp/lib/isc/*",
+    "bsd/freebsd/contrib/ntp/lib/isc/include/isc/*",
+    "bsd/freebsd/contrib/ntp/lib/isc/nls/msgcat.c",
+    "bsd/freebsd/contrib/ntp/lib/isc/unix/*",
+    "bsd/freebsd/contrib/ntp/lib/isc/unix/include/isc/*",
+    "bsd/freebsd/contrib/ntp/ntpq/*",
+    "bsd/freebsd/contrib/ntp/sntp/libopts/*",
+    "bsd/freebsd/contrib/ntp/sntp/libopts/autoopts/*",
+    "bsd/freebsd/contrib/ntp/sntp/libopts/compat/*",
+    "bsd/freebsd/contrib/ntp/ntpd/*",
+    "bsd/freebsd/contrib/ntp/ntpdc/*"
+]
