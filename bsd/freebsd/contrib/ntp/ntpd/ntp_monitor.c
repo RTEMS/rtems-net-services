@@ -367,6 +367,9 @@ ntp_monitor(
 		/* add one-half second to round up */
 		L_ADDUF(&interval_fp, 0x80000000);
 		interval = interval_fp.l_i;
+#ifdef __rtems__
+		interval = max(1, interval);
+#endif
 		mon->last = rbufp->recv_time;
 		NSRCPORT(&mon->rmtadr) = NSRCPORT(&rbufp->recv_srcadr);
 		mon->count++;
