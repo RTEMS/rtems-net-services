@@ -50,6 +50,9 @@ void rtems_ntp_worker_globals_fini(void) {
 			req_child_exit(c);
 			while (!c->reusable) {
 				usleep(10 * 1000UL);
+				if (NULL != c->wake_scheduled_sleep) {
+					sem_post(c->wake_scheduled_sleep);
+				}
 				process_blocking_resp(c);
 			}
 			free(c);
