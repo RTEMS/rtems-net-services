@@ -32,8 +32,10 @@
 #endif
 #include <sys/stat.h>
 
+#ifndef __rtems__
 #ifdef HAVE_IEEEFP_H
 # include <ieeefp.h>
+#endif
 #endif
 #ifdef HAVE_MATH_H
 # include <math.h>
