@@ -471,6 +471,7 @@ static void run_test(void)
   setup_etc();
 
   rtems_shell_add_cmd_struct(&rtems_shell_NTPQ_Command);
+  rtems_shell_add_cmd_struct(&rtems_shell_NTPSV_Command);
 
   sc = rtems_telnetd_start( &rtems_telnetd_config );
   rtems_test_assert( sc == RTEMS_SUCCESSFUL );

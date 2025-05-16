@@ -102,6 +102,7 @@
     "freebsd/contrib/ntp/libntp/machines.c",
     "freebsd/contrib/ntp/libntp/prettydate.c",
     "rtemsbsd/rtems/rtems-program.c",
+    "rtemsbsd/rtems/rtems-ntpd-sys-var.c",
     "rtemsbsd/rtems/rtems-ntpq.c",
     "rtemsbsd/rtems/rtems-program-socket.c"
   ]

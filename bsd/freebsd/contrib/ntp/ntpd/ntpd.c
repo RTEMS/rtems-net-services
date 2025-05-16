@@ -267,6 +267,116 @@ static bool ntpd_running;
 int rtems_ntpd_log_to_term;
 
 static void destroy_ntp_globals(void *arg);
+#define RTEMS_NTPD_LOCK_TRACE 0
+#include <rtems.h>
+void rtems_ntpd_lock(void) {
+#if RTEMS_NTPD_LOCK_TRACE
+	printf("] lock: %08x caller: lock=%p from=%p\n", rtems_task_self(), &ntpd_lock, __builtin_return_address(0));
+#endif /* RTEMS_NTPD_LOCK_TRACE */
+	rtems_mutex_lock(&ntpd_lock);
+}
+
+void rtems_ntpd_unlock(void) {
+#if RTEMS_NTPD_LOCK_TRACE
+	printf("] unlock: %08x caller: lock=%p from=%p\n", rtems_task_self(), &ntpd_lock, __builtin_return_address(0));
+#endif /* RTEMS_NTPD_LOCK_TRACE */
+	rtems_mutex_unlock(&ntpd_lock);
+}
+
+/*
+ * The rtems_ntpd_get_sys_vars call needs to get the leapsec and expire values
+ * and the type if defined in ntp_leapsec.h in this directory. The call here
+ * avoids extra includes in the build system or file copies.
+ */
+#include <ctype.h>
+#include <sys/utsname.h>
+#include "ntp_control.h"
+#include "ntp_leapsec.h"
+void rtems_ntpd_get_sys_vars(ntp_sys_var_data* sv) {
+  struct utsname utsnamebuf;
+  leap_signature_t lsig;
+  l_fp clock;
+  uint32_t refid;
+
+  memset(sv, 0, sizeof(*sv));
+  uname(&utsnamebuf);
+
+  /* Get the ntpd lock to access the global data */
+  rtems_ntpd_lock();
+
+  sv->status = ctlsysstatus();
+  strlcpy(
+    sv->status_str, statustoa(TYPE_SYS, sv->status), sizeof(sv->status_str));
+  strlcpy(sv->version, Version, sizeof(sv->version));
+  strlcpy(sv->processor, utsnamebuf.machine, sizeof(sv->processor));
+  snprintf(
+	sv->system, sizeof(sv->system) - 1, "%s/%s",
+	utsnamebuf.sysname, utsnamebuf.release);
+  sv->leap = sys_leap;
+  sv->stratum = sys_stratum;
+  sv->precision = sys_precision;
+  sv->rootdelay = sys_rootdelay * 1e3;
+  sv->rootdisp = sys_rootdisp * 1e3;
+  refid = sys_refid;
+  sv->reftime_sec = sys_reftime.l_ui;
+  sv->reftime_nsec = sys_reftime.l_uf;
+  get_systime(&clock);
+  sv->clock_sec = clock.l_ui;
+  sv->clock_nsec = clock.l_uf;
+  if (sys_peer != NULL) {
+    sv->peer = sys_peer->associd;
+  }
+  sv->tc = sys_poll;
+  sv->mintc = ntp_minpoll;
+  sv->offset = last_offset * 1e3;
+  sv->frequency = drift_comp * 1e6;
+  sv->sys_jitter = sys_jitter * 1e3;
+  sv->clk_jitter = clock_jitter * 1e3;
+  sv->clk_wander = clock_stability * 1e6;
+  sv->tai = sys_tai;
+  leapsec_getsig(&lsig);
+  if (lsig.ttime > 0) {
+    sv->leapsec = lsig.ttime;
+  }
+  if (lsig.etime > 0) {
+    sv->expire = lsig.etime;
+  }
+
+  /* numtoa() uses global data so hold the lock */
+  if (REFID_ISTEXT(sv->stratum)) {
+	size_t nc;
+	union {
+	  uint32_t w;
+	  uint8_t  b[sizeof(uint32_t)];
+	} bytes;
+	bytes.w = refid;
+	for (nc = 0; nc < sizeof(bytes.b) && bytes.b[nc]; ++nc) {
+	  if (!isprint(bytes.b[nc])
+		  || isspace(bytes.b[nc])
+		  || bytes.b[nc] == ','  ) {
+		  bytes.b[nc] = '.';
+	  }
+	}
+	memcpy(sv->refid, bytes.b, nc);
+  } else {
+	const char* ca = numtoa(refid);
+	strlcpy(sv->refid, ca, sizeof(sv->refid));
+  }
+
+  rtems_ntpd_unlock();
+}
+
+int rtems_ntpd_is_synchronized(ntp_sys_var_data* sv) {
+  return CTL_SYS_SOURCE(sv->status) != CTL_SST_TS_UNSPEC;
+}
+
+int rtems_ntpd_leap_warning(ntp_sys_var_data* sv) {
+  return CTL_SYS_LI(sv->status) != LEAP_NOWARNING;
+}
+
+int rtems_ntpd_leap_alarm(ntp_sys_var_data* sv) {
+  return CTL_SYS_LI(sv->status) == LEAP_NOTINSYNC;
+}
 
 static
 #endif /* __rtems__ */
@@ -1422,19 +1532,8 @@ int scmp_sc[] = {
 
 	for (;;) {
 #if !defined(SIM) && defined(SIGDIE1)
-#ifdef __rtems__
-		rtems_mutex_lock(&ntpd_lock);
-#endif /* __rtems__ */
 		if (signalled)
-#ifdef __rtems__
-		{
-			rtems_mutex_unlock(&ntpd_lock);
-#endif /* __rtems__ */
 			finish_safe(signo);
-#ifdef __rtems__
-		}
-		rtems_mutex_unlock(&ntpd_lock);
-#endif /* __rtems__ */
 #endif
 		GetReceivedBuffers();
 # else /* normal I/O */
@@ -1444,19 +1543,8 @@ int scmp_sc[] = {
 
 	for (;;) {
 #if !defined(SIM) && defined(SIGDIE1)
-#ifdef __rtems__
-		rtems_mutex_lock(&ntpd_lock);
-#endif /* __rtems__ */
 		if (signalled)
-#ifdef __rtems__
-		{
-			rtems_mutex_unlock(&ntpd_lock);
-#endif /* __rtems__ */
 			finish_safe(signo);
-#ifdef __rtems__
-		}
-		rtems_mutex_unlock(&ntpd_lock);
-#endif /* __rtems__ */
 #endif		
 		if (alarm_flag) {	/* alarmed? */
 			was_alarmed = TRUE;
@@ -1625,9 +1713,9 @@ rtems_ntpd_run(int argc, char **argv)
 {
 	int arg;
 	int r;
-	rtems_mutex_lock(&ntpd_lock);
+	rtems_ntpd_lock();
 	if (ntpd_running) {
-		rtems_mutex_unlock(&ntpd_lock);
+		rtems_ntpd_unlock();
 		return -1;
 	}
 	priority_done = 2;
@@ -1648,29 +1736,27 @@ rtems_ntpd_run(int argc, char **argv)
 		}
 	}
 	ntpd_running = true;
-	rtems_mutex_unlock(&ntpd_lock);
 	r = rtems_bsd_program_call_main("ntpd", ntpdmain, argc, argv);
-	rtems_mutex_lock(&ntpd_lock);
 	ntpd_running = false;
-	rtems_mutex_unlock(&ntpd_lock);
+	rtems_ntpd_unlock();
 	return r;
 }
 
 void
 rtems_ntpd_stop(void)
 {
-	rtems_mutex_lock(&ntpd_lock);
+	rtems_ntpd_lock();
 	signalled = 1;
-	rtems_mutex_unlock(&ntpd_lock);
+	rtems_ntpd_unlock();
 }
 
 int
 rtems_ntpd_running(void)
 {
 	int r;
-	rtems_mutex_lock(&ntpd_lock);
+	rtems_ntpd_lock();
 	r = ntpd_running ? 1 : 0;
-	rtems_mutex_unlock(&ntpd_lock);
+	rtems_ntpd_unlock();
 	return r;
 }
 #endif /* __rtems__ */

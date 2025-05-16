@@ -141,6 +141,9 @@ nic_rule *nic_rule_list;
 /* fill in for old/other timestamp interfaces */
 #endif
 
+#ifdef __rtems__
+#include <rtems/ntpd.h>
+#endif /* __rtems__ */
 #if defined(SYS_WINNT)
 #include "win32_io.h"
 #include <isc/win32os.h>
@@ -1197,11 +1200,7 @@ create_wildcards(
 		wildif->flags = INT_UP | INT_WILDCARD;
 		wildif->ignore_packets = (ACTION_DROP == action);
 
-#ifdef __rtems__
 		wildif->fd = open_socket(&wildif->sin, 0, 0, wildif);
-#else
-		wildif->fd = open_socket(&wildif->sin, 0, 1, wildif);
-#endif
 
 		if (wildif->fd != INVALID_SOCKET) {
 			wildipv6 = wildif;
@@ -1252,11 +1251,7 @@ create_wildcards(
 		SET_ADDR4N(&wildif->bcast, INADDR_ANY);
 		SET_PORT(&wildif->bcast, port);
 #endif /* MCAST */
-#ifdef __rtems__
-		wildif->fd = open_socket(&wildif->sin, 0, 0, wildif);
-#else
 		wildif->fd = open_socket(&wildif->sin, 0, 1, wildif);
-#endif
 
 		if (wildif->fd != INVALID_SOCKET) {
 			wildipv4 = wildif;
@@ -1722,10 +1717,19 @@ check_flags(
 	ZERO(ifr);
 	memcpy(&ifr.ifr_addr, &psau->sa, sizeof(ifr.ifr_addr));
 	strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	if (ioctl(fd, SIOCGIFAFLAG_IN, &ifr) < 0) {
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 		close(fd);
 		return ISC_FALSE;
 	}
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 	close(fd);
 	if ((ifr.ifr_addrflags & flags) != 0)
 		return ISC_TRUE;
@@ -1751,10 +1755,19 @@ check_flags6(
 	ZERO(ifr6);
 	memcpy(&ifr6.ifr_addr, &psau->sa6, sizeof(ifr6.ifr_addr));
 	strlcpy(ifr6.ifr_name, name, sizeof(ifr6.ifr_name));
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	if (ioctl(fd, SIOCGIFAFLAG_IN6, &ifr6) < 0) {
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 		close(fd);
 		return ISC_FALSE;
 	}
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 	close(fd);
 	if ((ifr6.ifr_ifru.ifru_flags6 & flags6) != 0)
 		return ISC_TRUE;
@@ -2996,7 +3009,13 @@ open_socket(
 		return INVALID_SOCKET;
 
 	/* create a datagram (UDP) socket */
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	fd = socket(AF(addr), SOCK_DGRAM, 0);
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 	if (INVALID_SOCKET == fd) {
 		errval = socket_errno();
 		msyslog(LOG_ERR,
@@ -3030,6 +3049,9 @@ open_socket(
 	 * This is undesirable on Windows versions starting with
 	 * Windows XP (numeric version 5.1).
 	 */
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 #ifdef SYS_WINNT
 	if (isc_win32os_versioncheck(5, 1, 0, 0) < 0)  /* before 5.1 */
 #endif
@@ -3038,6 +3060,9 @@ open_socket(
 					    ? &off
 					    : &on),
 			       sizeof(on))) {
+#ifdef __rtems__
+			rtems_ntpd_lock();
+#endif /* __rtems__ */
 
 			msyslog(LOG_ERR,
 				"setsockopt SO_REUSEADDR %s fails for address %s: %m",
@@ -3048,6 +3073,9 @@ open_socket(
 			closesocket(fd);
 			return INVALID_SOCKET;
 		}
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 #ifdef SO_EXCLUSIVEADDRUSE
 	/*
 	 * setting SO_EXCLUSIVEADDRUSE on the wildcard we open
@@ -3062,11 +3090,17 @@ open_socket(
 	 */
 	if (IS_IPV4(addr)) {
 #if defined(IPPROTO_IP) && defined(IP_TOS)
+#ifdef __rtems__
+		rtems_ntpd_unlock();
+#endif /* __rtems__ */
 		if (setsockopt(fd, IPPROTO_IP, IP_TOS, (void *)&qos,
 			       sizeof(qos)))
 			msyslog(LOG_ERR,
 				"setsockopt IP_TOS (%02x) fails on address %s: %m",
 				qos, stoa(addr));
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 #endif /* IPPROTO_IP && IP_TOS */
 		if (bcast)
 			socket_broadcast_enable(interf, fd, addr);
@@ -3076,6 +3110,9 @@ open_socket(
 	 * IPv6 specific options go here
 	 */
 	if (IS_IPV6(addr)) {
+#ifdef __rtems__
+		rtems_ntpd_unlock();
+#endif /* __rtems__ */
 #if defined(IPPROTO_IPV6) && defined(IPV6_TCLASS)
 		if (setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, (void *)&qos,
 			       sizeof(qos)))
@@ -3098,6 +3135,9 @@ open_socket(
 				"setsockopt IPV6_BINDV6ONLY on fails on address %s: %m",
 				stoa(addr));
 #endif
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 	}
 
 #ifdef OS_NEEDS_REUSEADDR_FOR_IFADDRBIND
@@ -3113,7 +3153,13 @@ open_socket(
 	/*
 	 * bind the local address.
 	 */
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	errval = bind(fd, &addr->sa, SOCKLEN(addr));
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 
 #ifdef OS_NEEDS_REUSEADDR_FOR_IFADDRBIND
 	if (!is_wildcard_addr(addr))
@@ -3142,6 +3188,9 @@ open_socket(
 		return INVALID_SOCKET;
 	}
 
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 #ifdef HAVE_TIMESTAMP
 	{
 		if (setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP,
@@ -3178,6 +3227,9 @@ open_socket(
 				    fd, stoa(addr)));
 	}
 #endif
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 
 	DPRINTF(4, ("bind(%d) AF_INET%s, addr %s%%%d#%d, flags 0x%x\n",
 		   fd, IS_IPV6(addr) ? "6" : "", stoa(addr),
@@ -3295,6 +3347,9 @@ sendpkt(
 		}
 #endif	/* MCAST */
 
+#ifdef __rtems__
+		rtems_ntpd_unlock();
+#endif /* __rtems__ */
 #ifdef SIM
 		cc = simulate_server(dest, src, pkt);
 #elif defined(HAVE_IO_COMPLETION_PORT)
@@ -3304,6 +3359,9 @@ sendpkt(
 		cc = sendto(src->fd, (char *)pkt, (u_int)len, 0,
 			    &dest->sa, SOCKLEN(dest));
 #endif
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 		if (cc == -1) {
 			src->notsent++;
 			packets_notsent++;
@@ -3384,7 +3442,13 @@ read_refclock_packet(
 		 */
 		char buf[RX_BUFF_SIZE];
 
+#ifdef __rtems__
+		rtems_ntpd_unlock();
+#endif /* __rtems__ */
 		buflen = read(fd, buf, sizeof buf);
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 		packets_dropped++;
 		return (buflen);
 	}
@@ -3396,9 +3460,15 @@ read_refclock_packet(
 		read_count = sizeof(rb->recv_space);
 	else
 		read_count = (u_int)rp->datalen;
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	do {
 		buflen = read(fd, (char *)&rb->recv_space, read_count);
 	} while (buflen < 0 && EINTR == errno);
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 
 	if (buflen <= 0) {
 		saved_errno = errno;
@@ -3585,8 +3655,14 @@ read_network_packet(
 			freerecvbuf(rb);
 
 		fromlen = sizeof(from);
+#ifdef __rtems__
+		rtems_ntpd_unlock();
+#endif /* __rtems__ */
 		buflen = recvfrom(fd, buf, sizeof(buf), 0,
 				  &from.sa, &fromlen);
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 		DPRINTF(4, ("%s on (%lu) fd=%d from %s\n",
 			(itf->ignore_packets)
 			    ? "ignore"
@@ -3601,6 +3677,9 @@ read_network_packet(
 
 	fromlen = sizeof(rb->recv_srcadr);
 
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 #ifndef HAVE_PACKET_TIMESTAMP
 	rb->recv_length = recvfrom(fd, (char *)&rb->recv_space,
 				   sizeof(rb->recv_space), 0,
@@ -3617,6 +3696,9 @@ read_network_packet(
 	msghdr.msg_flags      = 0;
 	rb->recv_length       = recvmsg(fd, &msghdr, 0);
 #endif
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 
 	buflen = rb->recv_length;
 
@@ -3738,6 +3820,7 @@ io_handler(void)
 	++handler_calls;
 #if __rtems__
 	memcpy(&rdfdes, &activefds, rtems_ntpd_fds_size);
+	rtems_ntpd_unlock();
 #else /* __rtems__ */
 	rdfdes = activefds;
 #endif /* __rtems__ */
@@ -3765,6 +3848,9 @@ io_handler(void)
 				&rdfdes, NULL, NULL,
 				&t1);
 	}
+#if __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 
 	if (nfound > 0) {
 		l_fp ts;
@@ -4167,7 +4253,13 @@ findlocalinterface(
 		}
 	}
 
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	rtn = connect(s, &addr->sa, SOCKLEN(addr));
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 	if (SOCKET_ERROR == rtn) {
 		closesocket(s);
 		return NULL;
@@ -4946,12 +5038,18 @@ static void
 init_async_notifications()
 {
 	struct asyncio_reader *reader;
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 #ifdef HAVE_RTNETLINK
 	int fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	struct sockaddr_nl sa;
 #else
 	int fd = socket(PF_ROUTE, SOCK_RAW, 0);
 #endif
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 	if (fd < 0) {
 		msyslog(LOG_ERR,
 			"unable to open routing socket (%m) - using polled interface update");
@@ -4966,11 +5064,20 @@ init_async_notifications()
 		       | RTMGRP_IPV6_IFADDR | RTMGRP_IPV4_ROUTE
 		       | RTMGRP_IPV4_MROUTE | RTMGRP_IPV6_ROUTE
 		       | RTMGRP_IPV6_MROUTE;
+#ifdef __rtems__
+	rtems_ntpd_unlock();
+#endif /* __rtems__ */
 	if (bind(fd, (struct sockaddr *)&sa, sizeof(sa)) < 0) {
 		msyslog(LOG_ERR,
 			"bind failed on routing socket (%m) - using polled interface update");
+#ifdef __rtems__
+		rtems_ntpd_lock();
+#endif /* __rtems__ */
 		return;
 	}
+#ifdef __rtems__
+	rtems_ntpd_lock();
+#endif /* __rtems__ */
 #endif
 	make_socket_nonblocking(fd);
 #if defined(HAVE_SIGNALED_IO)
