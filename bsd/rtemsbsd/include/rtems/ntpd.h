@@ -10,6 +10,7 @@
 
 /*
  * Copyright (C) 2022 embedded brains GmbH (http://www.embedded-brains.de)
+ * Copyright (C) 2025 Contemporary Software (chris@contemporary.software)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,6 +40,38 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief System Variables, the data you get from `ntpq -c rl`
+ */
+typedef struct {
+  unsigned int status;
+  char status_str[128];
+  char version[32];
+  char processor[32];
+  char system[32];
+  uint8_t leap;
+  uint8_t stratum;
+  int8_t precision;
+  double rootdelay;
+  double rootdisp;
+  char refid[32];
+  uint64_t reftime_sec;
+  uint64_t reftime_nsec;
+  uint64_t clock_sec;
+  uint64_t clock_nsec;
+  int peer;
+  int tc;                  /* ntpq: poll */
+  int mintc;               /* ntpq: minpoll */
+  double offset;
+  double frequency;        /* ntpd: drift */
+  double sys_jitter;
+  double clk_jitter;       /* ntpd: error */
+  double clk_wander;       /* ntpd: clock_stability */
+  int tai;
+  uint64_t leapsec;        /* ntpd: leaptab */
+  uint64_t expire;         /* ntpd: leapend */
+} ntp_sys_var_data;
 
 /**
  * @brief Runs the NTP daemon (nptd).
@@ -75,6 +108,36 @@ void rtems_ntpd_stop(void);
  */
 int rtems_ntpd_running(void);
 
+/**
+ * @brief Get the system variable data
+ */
+void rtems_ntpd_get_sys_vars(ntp_sys_var_data* sv);
+
+/**
+ * @brief Is the NTP synchronized to a clock source? Returns 1 or true
+ *        if synchronized.
+ */
+int rtems_ntpd_is_synchronized(ntp_sys_var_data* sv);
+
+/**
+ * @brief Is there a leap warning? Returns 1 or true if an alarm.
+ */
+int rtems_ntpd_leap_warning(ntp_sys_var_data* sv);
+
+/**
+ * @brief Is there a leap alarm? Returns 1 or true if an alarm.
+ */
+int rtems_ntpd_leap_alarm(ntp_sys_var_data* sv);
+
+/**
+ * @brief Lock the NTPD lock?
+ */
+void rtems_ntpd_lock(void);
+
+/**
+ * @brief Unlock the NTPD lock?
+ */
+void rtems_ntpd_unlock(void);
 
 #ifdef __cplusplus
 }

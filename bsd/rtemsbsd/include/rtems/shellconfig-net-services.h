@@ -46,6 +46,7 @@ extern "C" {
  *  Externs for all command definition structures
  */
 extern rtems_shell_cmd_t rtems_shell_NTPQ_Command;
+extern rtems_shell_cmd_t rtems_shell_NTPSV_Command;
 
 #ifdef __cplusplus
 }
