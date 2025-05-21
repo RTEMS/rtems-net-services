@@ -130,12 +130,28 @@ int rtems_ntpd_leap_warning(ntp_sys_var_data* sv);
 int rtems_ntpd_leap_alarm(ntp_sys_var_data* sv);
 
 /**
- * @brief Lock the NTPD lock?
+ * @brief Create a basic configuration
+ *
+ * This call creates a minimal client pool configuraition. A default
+ * leapsecond file will be created.
+ */
+int rtems_ntpd_client_pool_config(const char* pool_ip);
+
+/**
+ * @brief Add the NTP ports to /etc/services
+ *
+ * This call creates a minimal client pool configuraition. A default
+ * leapsecond file will be created.
+ */
+int rtems_ntpd_add_etc_services(void);
+
+/**
+ * @brief Lock the NTPD lock
  */
 void rtems_ntpd_lock(void);
 
 /**
- * @brief Unlock the NTPD lock?
+ * @brief Unlock the NTPD lock
  */
 void rtems_ntpd_unlock(void);
 
