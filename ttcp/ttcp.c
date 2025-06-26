@@ -57,7 +57,9 @@
 #ifndef RTEMS_NET_LWIP
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#endif
 #include <arpa/inet.h>
+#ifndef RTEMS_NET_LWIP
 #include <netdb.h>
 #endif
 #include <string.h>
