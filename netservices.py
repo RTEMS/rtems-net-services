@@ -255,6 +255,11 @@ def build(bld):
               use=[net_use])
     bld.install_files("${PREFIX}/" + arch_lib_path, ["libttcp.a"])
 
+    bld.install_files(os.path.join("${PREFIX}", arch_lib_path, "include"),
+                      "ttcp/include/ttcp.h",
+                      cwd=bld.path.find_dir('ttcp/include'),
+                      relative_trick=True)
+
     libs = ['rtemstest']
     if 'LIB_DEBUGGER' in bld.env:
         libs += bld.env.LIB_DEBUGGER
