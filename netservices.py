@@ -260,11 +260,40 @@ def build(bld):
                       cwd=bld.path.find_dir('ttcp/include'),
                       relative_trick=True)
 
+    telnetd_incl = inc + ['telnetd/include']
+
+    telnetd_source_files = [
+        "telnetd/check_passwd.c",
+        "telnetd/des.c",
+        "telnetd/genpw.c",
+        "telnetd/pty.c",
+        "telnetd/telnetd-init.c",
+        "telnetd/telnetd.c"
+    ]
+
+    bld.stlib(features='c',
+              target='telnetd',
+              source=telnetd_source_files,
+              includes=telnetd_incl,
+              cflags=cflags,
+              defines=[net_def],
+              use=[net_use])
+    bld.install_files("${PREFIX}/" + arch_lib_path, ["libtelnetd.a"])
+
+    telnetd_incl_install = [
+        "telnetd/include/rtems/passwd.h",
+        "telnetd/include/rtems/telnetd.h"
+    ]
+    bld.install_files(os.path.join("${PREFIX}", arch_lib_path, "include/rtems"),
+                      telnetd_incl_install,
+                      cwd=bld.path.find_dir('telnetd/include/rtems'),
+                      relative_trick=True)
+
     libs = ['rtemstest']
     if 'LIB_DEBUGGER' in bld.env:
         libs += bld.env.LIB_DEBUGGER
 
-    ntp_test_incl = ntp_incl + ['testsuites']
+    ntp_test_incl = ntp_incl + ['testsuites', 'telnetd/include']
     ntp_test_sources = ['testsuites/ntp01/test_main.c', net_adapter_source]
 
     bld.program(features='c',
@@ -274,8 +303,8 @@ def build(bld):
                 includes=ntp_test_incl,
                 install_path=None,
                 defines=[net_def],
-                lib=['telnetd'] + libs,
-                use=['ntp', net_use])
+                lib=libs,
+                use=['ntp', 'telnetd', net_use])
 
     ttcp_test_incl = ttcp_incl + ['testsuites']
     ttcp_test_sources = ['testsuites/ttcpshell01/test_main.c']
@@ -291,7 +320,7 @@ def build(bld):
                 lib=libs,
                 use=['ttcp', net_use])
 
-    tlnt_test_incl = inc + ['testsuites']
+    tlnt_test_incl = inc + ['testsuites', 'telnetd/include']
     tlnt_test_sources = ['testsuites/telnetd01/init.c']
     tlnt_test_sources += [net_adapter_source]
 
@@ -302,5 +331,5 @@ def build(bld):
                 defines=[net_def],
                 includes=tlnt_test_incl,
                 install_path=None,
-                lib=['telnetd'] + libs,
-                use=[net_use])
+                lib=libs,
+                use=['telnetd', net_use])
