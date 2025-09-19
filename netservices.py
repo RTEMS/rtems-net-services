@@ -130,10 +130,11 @@ def options(opt):
                      default='config.inc',
                      dest='net_config',
                      help='Network test configuration (default: %(default)s)')
-    copts.add_option('--ntp-debug',
-                     action='store_true',
-                     dest='ntp_debug',
-                     help='Build NTP with DEBUG enabled (default: %(default)s)')
+    copts.add_option(
+        '--ntp-debug',
+        action='store_true',
+        dest='ntp_debug',
+        help='Build NTP with DEBUG enabled (default: %(default)s)')
 
 
 def add_flags(flags, new_flags):
@@ -224,7 +225,7 @@ def build(bld):
 
     bld.add_group()
 
-    ntpq_defines = ['NO_MAIN_ALLOWED=1']
+    ntpq_defines = ['NO_MAIN_ALLOWED=1', 'STRERROR_R_CHAR_P=1']
 
     bld.stlib(features='c',
               target='ntp',
@@ -233,7 +234,7 @@ def build(bld):
               cflags=cflags,
               defines=[net_def, 'HAVE_CONFIG_H=1'] + ntpq_defines +
               bld.env.NTP_DEFINES,
-              use=[net_use])
+              use=[net_use, 'msyslog'])
     bld.install_files("${PREFIX}/" + arch_lib_path, ["libntp.a"])
     ntp_rtems_inc = bld.path.find_dir('bsd/rtemsbsd/include')
     if ntp_rtems_inc != None:
@@ -246,11 +247,16 @@ def build(bld):
 
     ttcp_source_files = ['ttcp/ttcp.c']
 
+    ttcp_no_warnings = [
+        '-Wno-implicit-function-declaration', '-Wno-int-conversion'
+    ]
+    ttcp_std = ['-std=c17']
+
     bld.stlib(features='c',
               target='ttcp',
               source=ttcp_source_files,
               includes=ttcp_incl,
-              cflags=cflags,
+              cflags=cflags + ttcp_no_warnings + ttcp_std,
               defines=[net_def],
               use=[net_use])
     bld.install_files("${PREFIX}/" + arch_lib_path, ["libttcp.a"])
@@ -263,12 +269,8 @@ def build(bld):
     telnetd_incl = inc + ['telnetd/include']
 
     telnetd_source_files = [
-        "telnetd/check_passwd.c",
-        "telnetd/des.c",
-        "telnetd/genpw.c",
-        "telnetd/pty.c",
-        "telnetd/telnetd-init.c",
-        "telnetd/telnetd.c"
+        "telnetd/check_passwd.c", "telnetd/des.c", "telnetd/pty.c",
+        "telnetd/telnetd-init.c", "telnetd/telnetd.c"
     ]
 
     bld.stlib(features='c',
@@ -281,10 +283,10 @@ def build(bld):
     bld.install_files("${PREFIX}/" + arch_lib_path, ["libtelnetd.a"])
 
     telnetd_incl_install = [
-        "telnetd/include/rtems/passwd.h",
-        "telnetd/include/rtems/telnetd.h"
+        "telnetd/include/rtems/passwd.h", "telnetd/include/rtems/telnetd.h"
     ]
-    bld.install_files(os.path.join("${PREFIX}", arch_lib_path, "include/rtems"),
+    bld.install_files(os.path.join("${PREFIX}", arch_lib_path,
+                                   "include/rtems"),
                       telnetd_incl_install,
                       cwd=bld.path.find_dir('telnetd/include/rtems'),
                       relative_trick=True)

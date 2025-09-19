@@ -69,6 +69,7 @@
 #define __need_getopt_newlib
 #include <getopt.h>
 #include <rtems/shell.h>
+#include <sys/select.h>
 #endif /* __rtems__ */
 
 #if RTEMS_NET_LWIP
